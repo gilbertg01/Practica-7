@@ -1,165 +1,150 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Solicitudes con Vue</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
-    <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-            crossorigin="anonymous"
-    />
-    <!-- Vue 3 desde CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-    <!-- AXIOS -->
+    <!-- Required Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <title>CRUD Serverless con VueJS</title>
 </head>
-
 <body>
-<!-- Contenedor principal -->
-<div class="container mt-3" id="root">
-    <h1 class="text-center">Listado de Solicitudes</h1>
 
-    <!-- Checkbox para mostrar registros pasados -->
-    <div class="d-flex justify-content-end mb-3">
-        <div class="form-check">
-            <!-- v-model para enlazar showOld -->
-            <input
-                    class="form-check-input"
-                    type="checkbox"
-                    v-model="showOld"
-                    @change="filterRequests"
-            />
-            <label class="form-check-label">Registros Pasados</label>
+<div class="container" id="app">
+    <div class="row mt-3">
+        <div class="col-sm">
+            <h1 class="text-center">Ejemplo CRUD Serverless - Aplicación Single Page - Vuejs</h1>
+            <div>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-1" @click="nuevaSolicitud">Crear Solicitud</button>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-sm">
+            <div class="d-flex justify-content-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @click="listaSolicitudesMostradas()" value="" id="flexCheckIndeterminate">
+                    <label class="form-check-label" for="flexCheckIndeterminate">
+                        Registros Pasados
+                    </label>
+                </div>
+            </div>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Matricula</th>
+                    <th scope="col">Laboratorio</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Hora</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="solicitud in solicitudesMostradas">
+                    <td>{{solicitud.id}}</td>
+                    <td>{{solicitud.nombre}}</td>
+                    <td>{{solicitud.matricula}}</td>
+                    <td>{{solicitud.laboratorio}}</td>
+                    <td>{{solicitud.fecha}}</td>
+                    <td>{{solicitud.hora}}</td>
+                    <td>
+                        <button type="button" class="btn btn-secondary" @click="editarSolicitud(solicitud)">Editar</button> |
+                        <button type="button" class="btn btn-danger" @click="eliminarSolicitud(solicitud)">Eliminar</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Botón para crear solicitud -->
-    <div class="mb-3">
-        <button class="btn btn-primary" @click="openNew">Crear Solicitud</button>
-    </div>
-
-    <!-- Tabla de solicitudes filtradas -->
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Matrícula</th>
-            <th>Correo</th>
-            <th>Laboratorio</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- Recorremos filteredRequests -->
-        <tr v-for="(s, index) in filteredRequests" :key="index">
-            <td>{{ s.id }}</td>
-            <td>{{ s.nombre }}</td>
-            <td>{{ s.matricula }}</td>
-            <td>{{ s.correo }}</td>
-            <td>{{ s.laboratorio }}</td>
-            <td>{{ s.fecha }}</td>
-            <td>{{ s.hora }}</td>
-            <td>
-                <button
-                        class="btn btn-secondary btn-sm me-2"
-                        @click="openEdit(s)"
-                >
-                    Editar
-                </button>
-                <button
-                        class="btn btn-danger btn-sm"
-                        @click="handleDelete(s)"
-                >
-                    Eliminar
-                </button>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
-    <!-- Modal para crear/editar solicitudes -->
-    <div class="modal fade" id="solicitudModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div id="modal-1" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5>{{ isEditing ? "Editar Solicitud" : "Nueva Solicitud" }}</h5>
-                    <button
-                            type="button"
-                            class="btn-close"
-                            id="closeModalButton"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"
-                    ></button>
+                    <h5>{{titulo}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-bs-target="#modal-1" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Mensaje de error -->
-                    <div class="alert alert-danger" v-if="errorMsg">
-                        {{ errorMsg }}
-                    </div>
+                    <form @submit.prevent="crearActualizarSolicitud" @reset="limpiar" >
 
-                    <!-- Formulario -->
-                    <form @submit.prevent="handleSubmit">
+                        <!-- Matricula       -->
                         <div class="mb-3">
-                            <label class="form-label">Matrícula</label>
-                            <input
-                                    type="number"
-                                    class="form-control"
-                                    v-model="formData.matricula"
-                                    required
-                            />
+                            <label for="g1" class="form-label">Matrícula</label>
+                            <input class="form-control"
+                                   id = "g1"
+                                   v-model="nuevo.matricula"
+                                   type="number"
+                                   required
+                                   placeholder="Matrícula"
+                            ></input>
                         </div>
+
+                        <!-- Nombre            -->
                         <div class="mb-3">
-                            <label class="form-label">Nombre</label>
-                            <input
-                                    type="text"
-                                    class="form-control"
-                                    v-model="formData.nombre"
-                                    required
-                            />
+                            <label for="g2" class="form-label">Nombre</label>
+                            <input class="form-control"
+                                   id = "g2"
+                                   v-model="nuevo.nombre"
+                                   type="text"
+                                   required
+                                   placeholder="Nombre"
+                            ></input>
                         </div>
+
+                        <!-- Correo            -->
                         <div class="mb-3">
-                            <label class="form-label">Correo</label>
-                            <input
-                                    type="email"
-                                    class="form-control"
-                                    v-model="formData.correo"
-                                    required
-                            />
+                            <label for="g4" class="form-label">Correo</label>
+                            <input class="form-control"
+                                   id = "g4"
+                                   v-model="nuevo.correo"
+                                   type="text"
+                                   required
+                                   placeholder="Correo"
+                            ></input>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Laboratorio</label>
-                            <select
-                                    class="form-select"
-                                    v-model="formData.laboratorio"
+                            <label for="g5" class="form-label">Laboratorio</label>
+                            <select class="form-control"
+                                    id = "g5"
+                                    name="g5"
+                                    v-model="nuevo.laboratorio"
                                     required
                             >
-                                <option value="">Seleccione</option>
+                                <option value="" disabled selected>Seleccione el laboratorio</option>
                                 <option value="redes">Redes</option>
-                                <option value="computacion">Computación</option>
+                                <option value="computacion">Computacion</option>
                             </select>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Fecha</label>
-                            <input
-                                    type="date"
-                                    class="form-control"
-                                    v-model="formData.fecha"
-                                    required
-                            />
+                            <label for="g6" class="form-label">Fecha</label>
+                            <input class="form-control"
+                                   id = "g6"
+                                   v-model="nuevo.fecha"
+                                   type="date"
+                                   required
+                                   placeholder="Fecha"
+                            ></input>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Hora</label>
-                            <select
-                                    class="form-select"
-                                    v-model="formData.hora"
+                            <label for="g7" class="form-label">Hora</label>
+                            <select class="form-control"
+                                    id = "g7"
+                                    name="g7"
+                                    v-model="nuevo.hora"
                                     required
                             >
-                                <option value="">Seleccionar hora</option>
+                                <option value="" disabled selected>Seleccione la hora</option>
                                 <option value="08:00 a 09:00">08:00 a 09:00</option>
                                 <option value="09:00 a 10:00">09:00 a 10:00</option>
                                 <option value="10:00 a 11:00">10:00 a 11:00</option>
@@ -176,214 +161,215 @@
                                 <option value="21:00 a 22:00">21:00 a 22:00</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary me-2">
-                            Guardar
-                        </button>
-                        <button
-                                type="reset"
-                                class="btn btn-secondary"
-                                @click="errorMsg = ''"
-                        >
-                            Limpiar
-                        </button>
+
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                        <button type="reset" class="btn btn-danger">Limpiar</button>
+
                     </form>
                 </div>
             </div>
+
         </div>
+
     </div>
+
+    <div id="modal-2" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>{{errorMsg}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-bs-target="#modal-2" aria-label="Close"></button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-<!-- Aquí seteamos la URL de la API en localStorage -->
-<script>
-    localStorage.setItem(
-        "API_URL",
-        "https://xkjovtc7c8.execute-api.us-east-1.amazonaws.com/prod/requests"
-    );
-    const API_URL = localStorage.getItem("API_URL") || "/api/solicitudes/";
-</script>
+<!-- BootStrap-->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
 
-<!-- Script Vue principal -->
+<!-- Libreria Vuejs -->
 <script>
+
+    const NOMBRE_KEY = "API_URL";
+    if(localStorage.getItem(NOMBRE_KEY) == null){
+        localStorage.setItem(NOMBRE_KEY, "https://x3i25k04f9.execute-api.us-east-1.amazonaws.com/prod/solicitudes")
+    }
+    const URL_API = localStorage.getItem(NOMBRE_KEY);
+
     const { createApp } = Vue;
 
-    createApp({
-        data() {
+    const app = createApp({
+
+        data(){
             return {
-                requests: [],
-                filteredRequests: [],
-                showOld: false,
-                formData: {
-                    id: "",
-                    nombre: "",
-                    matricula: "",
-                    correo: "",
-                    laboratorio: "",
-                    fecha: "",
-                    hora: ""
+                titulo: "Creación de Solicitud",
+                editando: false,
+                nuevo: {
+                    id: '',
+                    matricula: '',
+                    nombre: '',
+                    correo: '',
+                    laboratorio: '',
+                    fecha: '',
+                    hora: ''
                 },
-                isEditing: false,
-                errorMsg: ""
-            };
+                solicitudes: [],
+                solicitudesMostradas: [],
+                checkbox: "",
+                modal: "",
+                modalError: "",
+                errorMsg: "Mensaje de Error: No se pudo registrar la solicitud"
+            }
         },
+
         mounted() {
-            // Cargar solicitudes al iniciar
-            this.loadRequests();
+            console.log("Iniciando la aplicación en mounted: "+this.titulo);
+            this.$nextTick(function () {
+                console.log("Cargando todo el render del proyecto");
+                this.listaSolicitudes();
+                this.modal = new bootstrap.Modal(document.getElementById('modal-1'));
+                this.modalError = new bootstrap.Modal(document.getElementById('modal-2'));
+                this.checkbox = document.getElementById('flexCheckIndeterminate');
+            });
         },
+
+
         methods: {
-            loadRequests() {
-                axios
-                    .get(API_URL)
-                    .then((response) => {
-                        // Ajusta el nombre de la propiedad según tu respuesta.
-                        // Aquí suponemos que viene en 'response.data.solicitudes'
-                        this.requests = response.data.solicitudes || [];
-                        this.filterRequests();
-                    })
-                    .catch((error) => {
-                        console.log("Error al cargar solicitudes:", error);
-                    });
+            listaSolicitudes(){
+                console.log("Cargando lista de Solicitudes");
+                axios.get(URL_API).then(response => {
+                    console.log("Recuperando información del servidor");
+                    this.solicitudes = response.data.solicitudes;
+                    this.listaSolicitudesMostradas();
+                }).catch(error => { console.log(error); });
             },
 
-            filterRequests() {
-                const hoy = new Date();
-                const hoyStr = hoy.toISOString().slice(0, 10);
-                const horaActual =
-                    hoy.getHours().toString().padStart(2, "0") +
-                    ":" +
-                    hoy.getMinutes().toString().padStart(2, "0");
+            listaSolicitudesMostradas(){
+                console.log("listaSolicitudesMostradas");
+                var fechaActual = new Date();
+                var year = fechaActual.getFullYear();
+                var month = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
+                var day = ('0' + fechaActual.getDate()).slice(-2);
+                var fechaHoy = year + '-' + month + '-' + day;
+                var horas = ('0' + fechaActual.getHours()).slice(-2);
+                var minutos = ('0' + fechaActual.getMinutes()).slice(-2);
+                var horaFormateada = horas + ':' + minutos;
 
-                this.filteredRequests = this.requests.filter((item) => {
-                    const pos = item.hora.indexOf(" ");
-                    const horaSolo = pos > -1 ? item.hora.substring(0, pos) : item.hora;
-
-                    // Comparación "pasados" vs "futuros" como strings (simplificado):
-                    if (this.showOld) {
-                        return (
-                            item.fecha < hoyStr ||
-                            (item.fecha === hoyStr && horaSolo < horaActual)
-                        );
-                    } else {
-                        return (
-                            item.fecha > hoyStr ||
-                            (item.fecha === hoyStr && horaSolo >= horaActual)
-                        );
+                this.solicitudesMostradas = this.solicitudes.filter((elemento) => {
+                    var posicionEspacio = elemento.hora.indexOf(" ");
+                    var subcadena = elemento.hora.substring(0, posicionEspacio);
+                    if(this.checkbox.checked){
+                        return elemento.fecha < fechaHoy ||  (elemento.fecha <= fechaHoy && subcadena <= horaFormateada);
+                    }else {
+                        return elemento.fecha > fechaHoy ||  (elemento.fecha >= fechaHoy && subcadena > horaFormateada);
                     }
                 });
             },
 
-            handleSubmit() {
-                // 1) Parseamos la fecha y hora seleccionadas:
-                const selectedDate = new Date(this.formData.fecha);
-                if (isNaN(selectedDate.getTime())) {
-                    this.errorMsg = "Fecha inválida";
-                    return;
-                }
+            nuevaSolicitud(){
+                console.log("Nueva Solicitud");
+                this.titulo = "Nueva Solicitud";
+                this.editando = false;
+                this.limpiar();
+            },
 
-                // Extraer hora "HH:MM" de la opción elegida:
-                const pos = this.formData.hora.indexOf(" ");
-                const horaSolo = pos > -1
-                    ? this.formData.hora.substring(0, pos)  // "21:00"
-                    : this.formData.hora;                  // "21:00"
-                // Dividir en hora y minuto:
-                const [hh, mm] = horaSolo.split(":");
-                // Asignamos hora y minutos a la fecha:
-                selectedDate.setHours(hh || 0, mm || 0, 0);
+            crearActualizarSolicitud(){
+                console.log("datos para almacenar: ", this.nuevo);
+                var fechaActual = new Date();
+                var year = fechaActual.getFullYear();
+                var month = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
+                var day = ('0' + fechaActual.getDate()).slice(-2);
+                var fechaHoy = year + '-' + month + '-' + day;
+                var horas = ('0' + fechaActual.getHours()).slice(-2);
+                var minutos = ('0' + fechaActual.getMinutes()).slice(-2);
+                var horaFormateada = horas + ':' + minutos;
 
-                // 2) Validar fecha/hora pasada vs. 'ahora':
-                const now = new Date();
-                if (selectedDate < now) {
-                    this.errorMsg = "No se puede registrar con fecha/hora pasadas.";
-                    return;
-                }
+                var posicionEspacio = this.nuevo.hora.indexOf(" ");
+                var subcadena = this.nuevo.hora.substring(0, posicionEspacio);
 
-                this.errorMsg = "";
-
-                // 3) Guardar o editar
-                if (!this.isEditing) {
-                    // Crear nueva solicitud
-                    axios
-                        .post(API_URL, this.formData)
-                        .then((resp) => {
-                            if (resp.data.error) {
-                                this.errorMsg = resp.data.mensajeError || "Error desconocido";
-                            } else {
-                                this.closeModal();
-                                this.loadRequests();
+                if(this.nuevo.fecha < fechaHoy ||  (this.nuevo.fecha <= fechaHoy && subcadena < horaFormateada)){
+                    this.errorMsg = "No es posible registrar solicitudes con fechas anteriores.";
+                    this.modalError.show();
+                }else{
+                    if(!this.editando){
+                        this.nuevo.id = null;
+                        //creando
+                        axios.post(URL_API, this.nuevo).then(response => {
+                            if(response.data.error){
+                                this.errorMsg = response.data.mensajeError;
+                                this.modalError.show();
+                            }else{
+                                this.limpiar();
+                                this.listaSolicitudes();
                             }
-                        })
-                        .catch((err) => {
-                            this.errorMsg = "Error al crear la solicitud: " + err.message;
+                        }).catch(error => {
+                            this.errorMsg = error.message;
+                            this.modalError.show();
+                            console.log(error);
                         });
-                } else {
-                    // Editar solicitud
-                    axios
-                        .put(API_URL, this.formData)
-                        .then((resp) => {
-                            if (resp.data.error) {
-                                this.errorMsg = resp.data.mensajeError || "Error desconocido";
-                            } else {
-                                this.closeModal();
-                                this.loadRequests();
+                    } else{
+                        //editando
+                        axios.put(URL_API, this.nuevo).then(response => {
+                            if(response.data.error){
+                                this.errorMsg = response.data.mensajeError;
+                                this.modalError.show();
+                            }else{
+                                this.limpiar();
+                                this.listaSolicitudes();
                             }
-                        })
-                        .catch((err) => {
-                            this.errorMsg = "Error al actualizar la solicitud: " + err.message;
+                        }).catch(error => {
+                            this.errorMsg = error.message;
+                            this.modalError.show();
+                            console.log(error);
                         });
+                    }
+                    this.modal.hide();
                 }
             },
 
-            handleDelete(solicitud) {
-                if (confirm("¿Desea eliminar la solicitud ID: " + solicitud.id + "?")) {
-                    axios
-                        .delete(API_URL, { data: solicitud })
-                        .then(() => {
-                            this.loadRequests();
-                        })
-                        .catch((err) => {
-                            console.log("Error al eliminar:", err);
-                        });
+            editarSolicitud(solicitud) {
+                console.log("La Solicitud seleccionado para actualizar: ", solicitud);
+                this.titulo = "Editando Solicitud - "+solicitud.id;
+                this.nuevo = Object.assign({}, solicitud);
+                this.editando = true;
+
+                this.modal.show();
+            },
+
+            eliminarSolicitud(solicitud) {
+
+                const confirmed = confirm("¿Desea elminiar la solicitud: "+solicitud.id+"?");
+                if(confirmed) {
+                    console.log("Eliminando la solicitud: ", solicitud);
+                    axios.delete(URL_API, {data: solicitud}).then(response => {
+                        this.listaSolicitudes();
+                    }).catch(error => console.log(error));
                 }
             },
 
-            openNew() {
-                this.isEditing = false;
-                this.formData = {
-                    id: "",
-                    nombre: "",
-                    matricula: "",
-                    correo: "",
-                    laboratorio: "",
-                    fecha: "",
-                    hora: ""
-                };
-                this.errorMsg = "";
-                // Mostramos el modal de Bootstrap
-                new bootstrap.Modal(document.getElementById("solicitudModal")).show();
-            },
-
-            openEdit(solicitud) {
-                this.isEditing = true;
-                // Copiamos campos a formData
-                this.formData = { ...solicitud };
-                this.errorMsg = "";
-                new bootstrap.Modal(document.getElementById("solicitudModal")).show();
-            },
-
-            closeModal() {
-                document.getElementById("closeModalButton").click();
+            limpiar() {
+                this.nuevo.matricula='';
+                this.nuevo.nombre='';
+                this.nuevo.correo='';
+                this.nuevo.laboratorio='';
+                this.nuevo.fecha='';
+                this.nuevo.hora='';
             }
-        }
-    }).mount("#root");
-</script>
 
-<!-- Bootstrap JS (Popper incluido) -->
-<script
-        src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        crossorigin="anonymous"
-></script>
-<script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"
-        crossorigin="anonymous"
-></script>
+        }
+    });
+
+    /**
+     *
+     */
+    app.mount('#app');
+
+
+</script>
 </body>
 </html>
